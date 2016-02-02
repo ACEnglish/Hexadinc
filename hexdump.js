@@ -259,8 +259,14 @@ Hexdump = (function() {
           var split = self.splitNulls(code);
           
           for (var y = 0; y < split.length; y++) {
-            hexArray.push('<span data-hex-id="' + self.hexCounter + '">' + 
-            split[y] + '</span>');
+            //english coloring
+            if (split[y] == '4a' || split[y] == '5d') {
+                hexArray.push('<span data-hex-id="' + self.hexCounter + '">' + 
+                    '<span style="background-color:#ff3333">' + split[y] + '</span>'+ '</span>');
+            } else {
+                hexArray.push('<span data-hex-id="' + self.hexCounter + '">' + 
+                split[y] + '</span>');
+            }
           };
 
         } else {
@@ -355,7 +361,8 @@ Hexdump = (function() {
     var self = this, length = ch.toString().length, pad = '';
 
     for (var i=0; i < (padding - length); i++) {
-      pad += '0'
+      //english - got rid of '00' pad for just spaces
+      pad += ' '
     };
    
     if (self.options.endian == 'big') {

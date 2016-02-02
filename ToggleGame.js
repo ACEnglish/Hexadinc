@@ -39,9 +39,10 @@ var hexdump = new Hexdump(payload.value, hexdumpProperties);
 
 var hexRefresh = function() { hexdump.constructor(payload.value, hexdumpProperties); }
 
-setInterval(function() {
+interval = setInterval(function() {
     payloadBuffer.shift(); payloadBuffer.push(getRandomChar());
     payloadDump();
     hexRefresh();
-}, 50);
+}, 500);
+//clearInterval(interval);
 

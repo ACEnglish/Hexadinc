@@ -29,7 +29,7 @@ This kind of thing is super cool.</br>
     I'll need to make tons of formulas so that they all are interesting and have benefits/drawbacks</li>
     <li>for example, particular configurations of dropdowns and checkboxes can makeit so that the sliders can lose
     energy over time</li>
-    <li>I need to get rid of the 00 buffer in between my hex dump</li>
+    <li><strike>I need to get rid of the 00 buffer in between my hex dump</strike></li>
     <li>I want the hex dump to start off with a single register (000000). Then, resources can be used to add new ones
     over time - this is a blance of hexdumpProperties.width and payloadBuffer.length</li>
     <li>You gain flops or cycles as a single byte goes through the register. - For example, if you only have one register
@@ -42,6 +42,11 @@ This kind of thing is super cool.</br>
     balancing these things with the toggles will be the key</li>
     <li>Since this is an incremental game, I will need to figure out how to allow clicks to help. I'm thinking A -
     clicks can add resource bytes to the register and B - Clicks can add to the sliders</li>
+    <li>I'll need width and height to be powers of so that they stay full.. I think.. that's not true. but that is an
+    easy way to ensure that width and length = area. length is area - width * X = area ... so area/width would be lines.
+    And you know we could have incomplete registers with blanks.</li>
+    <li>One of the things you can unlock is characters that give values. So in the coloring I have 4a and 5d that get
+    hightlighted. As you advance, more and more of the ascii characters are unlockable for giving you resources</li>
 </ul>
 </br>
 </div>
