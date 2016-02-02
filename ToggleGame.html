@@ -55,9 +55,24 @@
                 <li>A generic object for the click boxes. Click boxes will add tiny amounts to sliders' levels.</li>
                 <li>A hexdump - Need to refactor it so that it is usable for what I'm looking for</li>
             </ul>
+            <li>It could be cool to make a gui like htop for the right of the hexdump that shows resource - you could
+            potentially overclock or overheat your cpu.</li>
+            <li>I would registers are independent of CPUs - you can buy CPUs and expand your MotherBoard and stuff buy a
+            GPU and buy a Cloud and a Quantum Computer etc/etc. Those contribute to properties of the registers</li>
+            <li>Too many GPUs and you use up a lot of energy which costs you resources</li>
+            <li>The important part here is you need to blance utilization so that you are always gaining resource.</li>
         </ul>
         </br>
     </div>
+    
+    <canvas id="myCanvas" width="200" height="100" style="border:1px solid #000000;">
+    </canvas>
+    <script>
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
+            ctx.fillStyle = "#FF0000";
+            ctx.fillRect(0,0,150,75);
+    </script>
 
     <form oninput="val1.value = parseInt(sld1.value) + parseInt(but1.value); val2.value=parseInt(sld2.value) + parseInt(but2.value); val3.value = parseInt(val2.value) - parseInt(but2.value) * (parseInt(val4.value) / (parseInt(sld3.value) * parseInt(but3.value)))">
         0<input type="range" id="sld1" value="50">100 + <input type="button" id="but1" value="0" onclick="but1.value = parseInt(but1.value) + 1"> = <output name="val1" for="sld1 but1">100</output>
