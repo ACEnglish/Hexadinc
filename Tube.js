@@ -1,51 +1,43 @@
-Tube = function(name, commonName, desc, icon, art, price, cps, buyFunction, priceIncrease)
+/*
+ * Abstraction of all of the earners
+ */
+Tube = function(name, commonName, desc, price, cps, buyFunction, priceIncrease)
 {
-    this.id = Game.ObjectsN;
+    //Unique Id -- Don't think I need this
+    this.id = 0; //Game.ObjectsN;
+    
     this.name = name;
     this.displayName = this.name;
+    
     commonName = commonName.split('|');
     this.single = commonName[0];
     this.plural = commonName[1];
     this.actionName = commonName[2];
+    
     this.desc = desc;
+    
     this.basePrice = price;
     this.price = this.basePrice;
     this.cps = cps;
     this.totalCookies = 0;
     this.storedCps = 0;
     this.storedTotalCps = 0;
-    this.icon = icon;
-    this.art = art;
-    if (art.base)
-    {
-        art.pic = art.base+'.png'; 
-        art.bg=art.base+'Background.png';
-    }
+    
     this.buyFunction = buyFunction;
     this.locked = 1;
-    this.vanilla = Game.vanilla;
             
-    this.special = null;//special is a function that should be triggered when the object's special is unlocked, or on load (if it's already unlocked). For example, creating a new dungeon.
-    this.onSpecial = 0;//are we on this object's special screen (dungeons etc)?
-    this.specialUnlocked = 0;
-    this.specialDrawFunction = null;
-    this.drawSpecialButton = null;
-    
     this.amount = 0;
     this.bought = 0;
             
     this.getPrice = function()
     {
-        var price = this.basePrice * Math.pow(Game.priceIncrease, this.amount);
-        if (Game.Has('Season savings')) price *= 0.99;
-        if (Game.Has('Santa\'s dominion')) price *= 0.99;
-        if (Game.Has('Faberge egg')) price *= 0.99;
+        var price = this.basePrice * Math.pow(this.priceIncrease, this.amount);
         return Math.ceil(price);
     }
             
-    this.buy=function(amount)
+    this.buy = function(amount)
     {
-        var success = 0;
+        var success = false;
         var moni = 0;
         var bought = 0;
         if (!amount) amount = 1;
@@ -53,96 +45,105 @@ Tube = function(name, commonName, desc, icon, art, price, cps, buyFunction, pric
         for (var i = 0; i < amount; i++)
         {
             var price = this.getPrice();
-            if (Game.cookies >= price)
+            var bought = Bank.withdraw(price);
+            if (bought)
             {
                 bought++;
                 moni += price;
-                Game.Spend(price);
                 this.amount++;
                 this.bought++;
-                price = this.getPrice();
+                this.price = this.getPrice();
+                /* Looks like - this is how things get unlocked
                 this.price = price;
                 if (this.buyFunction) this.buyFunction();
                 Game.recalculateGains = 1;
                 if (this.amount == 1 && this.id != 0) 
                     l('row'+this.id).className = 'row enabled';
-                Game.BuildingsOwned++;
-                success = 1;
+                Game.BuildingsOwned++;*/
+                success = true;
             }
         }
         
         if (success) {this.refresh();}
-        if (moni>0 && amount>1) 
-            Game.Notify(this.name,'Bought <b>'+bought+'</b> for ' + Beautify(moni) + ' cookies','',2);
+        //Would love this feature eventually
+        //if (moni>0 && amount>1) 
+        //Game.Notify(this.name,'Bought <b>'+bought+'</b> for ' + Beautify(moni) + ' cookies','',2);
     }
-
+    
+    /*Sells object back at a depreciated price */
     this.sell = function(amount, bypass)
     {
         var success = 0;
         var moni = 0;
         var sold = 0;
         if (amount == -1) amount = this.amount;
+        
         if (!amount) amount = 1;
             
         for (var i = 0;i < amount; i++)
         {
-            var price=this.getPrice();
-            price=Math.floor(price*0.5);
+            var price = this.getPrice();
+            price = Math.floor(price*0.5);
             if (this.amount>0)
             {
                 sold++;
                 moni+=price;
-                Game.cookies+=price;
+                Bank.deposit(price);
                 this.amount--;
                 price=this.getPrice();
                 this.price=price;
+                /* Again with the unlock stuff..
                 if (this.sellFunction) this.sellFunction();
                 Game.recalculateGains=1;
                 if (this.amount==0 && this.id!=0) l('row'+this.id).className='row';
                 Game.BuildingsOwned--;
-                success=1;
+                */
+                success = true;
             }
         }
         
         if (success) {this.refresh();}
-        if (moni>0) Game.Notify(this.name,'Sold <b>'+sold+'</b> for '+Beautify(moni)+' cookies','',2);
+        //if (moni>0) Game.Notify(this.name,'Sold <b>'+sold+'</b> for '+Beautify(moni)+' cookies','',2);
     }
             
-    this.tooltip=function()
+    this.tooltip = function()
     {
         var me=this;
-        var desc=me.desc;
-        var name=me.name;
-        if (Game.season=='fools')
+        var desc = '';
+        var name = '???';
+        
+        
+        if (!me.locked)
         {
-            if (!Game.foolIcons[me.name])
-            {
-                name=Game.foolNames['Unknown'];
-                desc=Game.foolDescs['Unknown'];
-            } else {
-                name=Game.foolNames[me.name];
-                desc=Game.foolDescs[me.name];
+            desc = me.desc;
+            name = me.name;
+        }
+                
+        var ret = '<div style="min-width:300px;">' +
+                  '<div style="float:right;"><span class="price">' + Beautify(Math.round(me.price), false) + '</span></div>' + 
+                  '<div class="name">' + name + '</div>' + 
+                  '<small>[owned : ' + me.amount + '</small>]' + 
+                  '<div class="description">' + desc + '</div>';
+        
+        if (me.totalCookies > 0) {
+            ret += '<div class="data">' 
+            if (me.amount > 0) {
+                ret += '&bull; each ' + me.single + ' produces <b>' +
+                        Beautify((me.storedTotalCps / me.amount) * Game.globalCpsMult, false) + '</b> ' +
+                        ((me.storedTotalCps/me.amount) * Game.globalCpsMult == 1 ? 'cookie':'cookies') + ' per second<br>' +
+                        '&bull; ' + me.amount + ' ' + (me.amount == 1 ? me.single : me.plural) + ' producing <b>' +
+                        Beautify(me.storedTotalCps * Game.globalCpsMult, false) + '</b> ' + 
+                        (me.storedTotalCps * Game.globalCpsMult == 1 ? 'cookie':'cookies') + ' per second<br>' + 
+                        '&bull; <b>' + Beautify(me.totalCookies, false) + '</b> ' + 
+                        (Math.floor(me.totalCookies) == 1 ? 'cookie':'cookies') + ' ' + me.actionName+' so far</div>';
             }
         }
         
-        if (me.locked)
-        {
-            name='???';
-            desc='';
-        }
-                
-        return '<div style="min-width:300px;"><div style="float:right;"><span class="price">'+Beautify(Math.round(me.price))+'</span></div><div class="name">'+name+'</div>'+'<small>[owned : '+me.amount+'</small>]'+
-                '<div class="description">'+desc+'</div>'+
-                (me.totalCookies>0?(
-                    '<div class="data">'+
-                    (me.amount>0?'&bull; each '+me.single+' produces <b>'+Beautify((me.storedTotalCps/me.amount)*Game.globalCpsMult,1)+'</b> '+((me.storedTotalCps/me.amount)*Game.globalCpsMult==1?'cookie':'cookies')+' per second<br>':'')+
-                    '&bull; '+me.amount+' '+(me.amount==1?me.single:me.plural)+' producing <b>'+Beautify(me.storedTotalCps*Game.globalCpsMult,1)+'</b> '+(me.storedTotalCps*Game.globalCpsMult==1?'cookie':'cookies')+' per second<br>'+
-                    '&bull; <b>'+Beautify(me.totalCookies)+'</b> '+(Math.floor(me.totalCookies)==1?'cookie':'cookies')+' '+me.actionName+' so far</div>'
-                ):'')+
-                '</div>';
+        ret += "</div>";
+        return  ret
     }
-            
-    this.setSpecial=function(what)//change whether we're on the special overlay for this object or not
+    
+    this.setSpecial = function(what)//change whether we're on the special overlay for this object or not
     {
                 return;//blocked temporarily
                 if (what==1) this.onSpecial=1;
@@ -161,28 +162,30 @@ Tube = function(name, commonName, desc, icon, art, price, cps, buyFunction, pric
                     }
                 }
     }
-            this.unlockSpecial=function()
-            {
-                if (this.specialUnlocked==0 && 1==0)
-                {
-                    this.specialUnlocked=1;
-                    this.setSpecial(0);
-                    if (this.special) this.special();
-                    this.refresh();
-                }
-            }
+    
+    this.unlockSpecial=function()
+    {
+        if (this.specialUnlocked==0 && 1==0)
+        {
+            this.specialUnlocked=1;
+            this.setSpecial(0);
+            if (this.special) this.special();
+            this.refresh();
+        }
+    }
             
-    this.refresh=function()//show/hide the building display based on its amount, and redraw it
+    this.refresh = function()//show/hide the building display based on its amount, and redraw it
     {
             this.price=this.getPrice();
             this.rebuild();
-            if (this.amount==0 && this.id!=0) l('row'+this.id).className='row';
-            else if (this.amount>0 && this.id!=0) l('row'+this.id).className='row enabled';
-            if (!this.onSpecial) this.draw();
+            if (this.amount == 0 && this.id != 0) l('row' + this.id).className='row';
+            else if (this.amount>0 && this.id!=0) l('row' + this.id).className='row enabled';
+            //if (!this.onSpecial) this.draw();
             //else if (this.specialDrawFunction && this.onSpecial) this.specialDrawFunction();
     }
-
-    this.rebuild=function()
+    
+    /* This is the display things mostly I think */
+    this.rebuild = function()
     {
         var me=this;
         var classes='product';

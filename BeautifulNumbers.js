@@ -53,8 +53,9 @@ var numberFormatters =
     ])
 ];
 
-function Beautify(value, floats, full)
+function Beautify(value, full)
 {
+    floats = 2
     var negative=(value<0);
     var decimal='';
     if (value < 1000000 && floats > 0) decimal = '.' + (value.toFixed(floats).toString()).split('.')[1];
